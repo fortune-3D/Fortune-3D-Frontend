@@ -1,3 +1,20 @@
+# Fortune 3D
+
+## Authors
+Darran Holmes
+Sheldon Pierce
+Dominick Martin
+Tyler Huntley
+
+### WireFrame
+https://www.figma.com/file/rLMTk3BIZfG4aFWiKH04n0/Untitled?type=whiteboard&node-id=0-1&t=IZRyOlEEQgtYoVh6-0
+
+### Domain Model/Data Base Schema
+![](../assets/domain_model.png)
+
+
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
