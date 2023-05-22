@@ -1,113 +1,168 @@
-import Image from 'next/image'
+'use client'
 
-export default function Home() {
+import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+
+
+const Sphere = () => {
+  const containerRef = useRef(null);
+  const [question, setQuestion] = useState('');
+  const [response, setResponse] = useState('');
+  const cameraRef = useRef(null);
+
+  useEffect(() => {
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+    cameraRef.current = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    containerRef.current.appendChild(renderer.domElement);
+
+    // Create a background of stars
+    const starCount = 3000;
+    const starsGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount; i++) {
+      const i3 = i * 3;
+      starPositions[i3] = (Math.random() - 0.5) * 2000;
+      starPositions[i3 + 1] = (Math.random() - 0.5) * 2000;
+      starPositions[i3 + 2] = (Math.random() - 0.5) * 2000;
+    }
+
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    const light = new THREE.PointLight(0xFFFFFF);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+
+    // Load the texture
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load('globe_texture.jpg');
+
+    // Create the material with shading and the texture
+    const material = new THREE.MeshPhongMaterial({
+      map: texture,
+      shininess: 100,
+    });
+
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height);
+    };
+
+    const handleMouseWheel = (event) => {
+      const zoomSpeed = 0.01;
+      const minZoom = 2;
+      const maxZoom = 50;
+
+      const deltaY = event.deltaY;
+      let zoom = camera.position.z + deltaY * zoomSpeed;
+      zoom = Math.max(zoom, minZoom);
+      zoom = Math.min(zoom, maxZoom);
+      camera.position.z = zoom;
+    };
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      // Move the stars
+      const positions = starsGeometry.attributes.position.array;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] -= 0.1;
+        if (positions[i + 1] < -1000) {
+          positions[i + 1] = 1000;
+        }
+      }
+      starsGeometry.attributes.position.needsUpdate = true;
+
+      // Rotate the sphere
+      sphere.rotation.x += 0.005;
+      sphere.rotation.y += 0.005;
+
+      renderer.render(scene, cameraRef.current);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('wheel', handleMouseWheel);
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('wheel', handleMouseWheel);
+      renderer.dispose();
+    };
+  }, []);
+
+  const handleQuestionChange = (event) => {
+    setQuestion(event.target.value);
+  };
+
+  const handleAskQuestion = () => {
+    // Make API request with the question and update the response state
+    fetch(`https://fortune-backend.vercel.app/api/v1/fortune/`)
+      .then((response) => response.json())
+      .then((data) => {
+        const fortune = data[Math.floor(Math.random() * data.length)].fortune;
+        setResponse(fortune);
+        const responseText = new THREE.Mesh(
+          // new THREE.TextBufferGeometry(fortune, {
+          //   font: THREE.FontUtils.faces['helvetiker'],
+          //   size: 0.1,
+          //   height: 0.02,
+          // }),
+          new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        responseText.position.set(0, 0.3, -2); // Adjust the position as needed
+        scene.add(responseText);
+      })
+      .catch((error) => console.error(error));
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <div>
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1,
+        }}
+      >
+        <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
+</label>
+        <input
+          id="questionInput"
+          type="text"
+          value={question}
+          onChange={handleQuestionChange}
+          
         />
+        <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+        <p className='text-white'>{response}</p>
       </div>
+      <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
+    </div>
+  );
+};
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
-}
+export default Sphere;
