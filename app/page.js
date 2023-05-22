@@ -94,8 +94,8 @@ const Sphere = () => {
       starsGeometry.attributes.position.needsUpdate = true;
 
       // Rotate the sphere
-      sphere.rotation.x += 0.005;
-      sphere.rotation.y += 0.005;
+      sphere.rotation.x += 0.000028;
+      sphere.rotation.y += 0.001;
 
       renderer.render(scene, cameraRef.current);
     };
