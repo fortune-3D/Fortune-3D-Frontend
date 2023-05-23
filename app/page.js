@@ -39,8 +39,27 @@ const Sphere = () => {
       starPositions[i3 + 2] = (Math.random() - 0.5) * 2000;
     }
 
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
+      // Create a custom shader material for the stars
+    const starVertexShader = `
+      attribute float size;
+      void main() {
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = size * (300.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `;
+
+    const starFragmentShader = `
+      void main() {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      }
+    `;
+
+    const starsMaterial = new THREE.ShaderMaterial({
+      vertexShader: starVertexShader,
+      fragmentShader: starFragmentShader,
+    });
+
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
@@ -76,11 +95,21 @@ const Sphere = () => {
     plane.receiveShadow = true; // Enable shadow receiving
     scene.add(plane);
 
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    // const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
+    // const stars = new THREE.Points(starsGeometry, starsMaterial);
+    // scene.add(stars);
+
+    // const light = new THREE.PointLight(0xFFFFFF);
+    // light.position.set(10, 10, 10);
+    // scene.add(light);
+
+
+    const geometry = new THREE.SphereGeometry(1, 64, 64);
 
     // Load the texture
     const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('globe_texture.jpg');
+    const texture = textureLoader.load('earth_texture.jpg');
 
     // Create the material with shading and the texture
     const material = new THREE.MeshPhongMaterial({
@@ -116,15 +145,16 @@ const Sphere = () => {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // Move the stars
-      const positions = starsGeometry.attributes.position.array;
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 1] -= 0.1;
-        if (positions[i + 1] < -1000) {
-          positions[i + 1] = 1000;
-        }
+
+    // Move the stars
+    const positions = starsGeometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i + 2] += 0.1; // Increase the z-coordinate
+      if (positions[i + 2] > 1000) {
+        positions[i + 2] = -1000;
       }
-      starsGeometry.attributes.position.needsUpdate = true;
+    }
+    starsGeometry.attributes.position.needsUpdate = true;
 
       // Rotate the sphere
       sphere.rotation.x += 0.000028;
