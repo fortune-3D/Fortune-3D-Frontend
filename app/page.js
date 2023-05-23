@@ -43,11 +43,11 @@ const Sphere = () => {
     light.position.set(10, 10, 10);
     scene.add(light);
 
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const geometry = new THREE.SphereGeometry(1, 64, 64);
 
     // Load the texture
     const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('globe_texture.jpg');
+    const texture = textureLoader.load('earth_texture.jpg');
 
     // Create the material with shading and the texture
     const material = new THREE.MeshPhongMaterial({
@@ -83,15 +83,16 @@ const Sphere = () => {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // Move the stars
-      const positions = starsGeometry.attributes.position.array;
-      for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 1] -= 0.1;
-        if (positions[i + 1] < -1000) {
-          positions[i + 1] = 1000;
-        }
+
+    // Move the stars
+    const positions = starsGeometry.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i + 2] += 0.1; // Increase the z-coordinate
+      if (positions[i + 2] > 1000) {
+        positions[i + 2] = -1000;
       }
-      starsGeometry.attributes.position.needsUpdate = true;
+    }
+    starsGeometry.attributes.position.needsUpdate = true;
 
       // Rotate the sphere
       sphere.rotation.x += 0.000028;
