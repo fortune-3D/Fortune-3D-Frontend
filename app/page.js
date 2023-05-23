@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+import 'typeface-poppins';
+import './globals.css';
+
 
 
 const Sphere = () => {
@@ -39,9 +44,37 @@ const Sphere = () => {
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    const light = new THREE.PointLight(0xFFFFFF);
-    light.position.set(10, 10, 10);
-    scene.add(light);
+    // Light
+    // Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    // Point Light
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.set(0, 10, 10);
+    scene.add(pointLight);
+
+    // Directional Light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    directionalLight.position.set(0, 0, 10);
+    directionalLight.castShadow = true; // Enable shadow casting
+    scene.add(directionalLight);
+
+
+    // Set up shadow properties for the light
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+
+
+    // Ground Plane
+    const planeGeometry = new THREE.PlaneGeometry(20, 20);
+    const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.3 });
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = -Math.PI / 2;
+    plane.receiveShadow = true; // Enable shadow receiving
+    scene.add(plane);
 
     const geometry = new THREE.SphereGeometry(1, 32, 32);
 
@@ -100,6 +133,14 @@ const Sphere = () => {
       renderer.render(scene, cameraRef.current);
     };
 
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.enablePan = false
+    controls.enableZoom = false
+    controls.autoRotate = true
+    controls.autoRotateSpeed = 3
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('wheel', handleMouseWheel);
 
@@ -139,25 +180,29 @@ const Sphere = () => {
 
   return (
     <div>
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 1,
-        }}
+      <div className='oracle'
+      // style={{
+      //   position: 'fixed',
+      //   top: '50%',
+      //   left: '50%',
+      //   transform: 'translate(-50%, -50%)',
+      //   zIndex: 1,
+      // }}
       >
-        <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
-</label>
-        <input
-          id="questionInput"
-          type="text"
-          value={question}
-          onChange={handleQuestionChange}
-          
-        />
-        <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+        <div className='label'>
+          <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
+          </label>
+        </div>
+        <div className='questionInput'>
+          <input
+            id="questionInput"
+            type="text"
+            value={question}
+            onChange={handleQuestionChange}
+
+          />
+          <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+        </div>
         <p className='text-white'>{response}</p>
       </div>
       <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
