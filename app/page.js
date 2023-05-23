@@ -14,6 +14,8 @@ const Sphere = () => {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const cameraRef = useRef(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [isSphereClicked, setIsSphereClicked] = useState(false); // New state variable
 
   useEffect(() => {
     const scene = new THREE.Scene();
@@ -101,6 +103,8 @@ const Sphere = () => {
       renderer.setSize(width, height);
     };
 
+    
+
     const handleMouseWheel = (event) => {
       const zoomSpeed = 0.01;
       const minZoom = 2;
@@ -113,6 +117,38 @@ const Sphere = () => {
       camera.position.z = zoom;
     };
 
+    // const handleSphereClick = (event) => {
+    //   if (event.target === sphere)
+    //   setIsSphereClicked(true);
+    // };
+
+    const handleSphereClick = (event) => {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+    
+      // Calculate the mouse position in normalized device coordinates (-1 to +1)
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+      // Set the raycaster origin and direction based on the mouse position
+      raycaster.setFromCamera(mouse, cameraRef.current);
+    
+      // Find all intersected objects
+      const intersects = raycaster.intersectObjects(scene.children, true);
+    
+      // Check if the sphere is clicked
+      for (let i = 0; i < intersects.length; i++) {
+        if (intersects[i].object === sphere) {
+          setIsSphereClicked(true);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('wheel', handleMouseWheel);
+    containerRef.current.addEventListener('click', handleSphereClick);
+
     const animate = () => {
       requestAnimationFrame(animate);
 
@@ -121,14 +157,17 @@ const Sphere = () => {
       for (let i = 0; i < positions.length; i += 3) {
         positions[i + 1] -= 0.1;
         if (positions[i + 1] < -1000) {
-          positions[i + 1] = 1000;
+         positions[i + 1] = 1000;
         }
+
       }
       starsGeometry.attributes.position.needsUpdate = true;
 
       // Rotate the sphere
       sphere.rotation.x += 0.000028;
       sphere.rotation.y += 0.001;
+
+
 
       renderer.render(scene, cameraRef.current);
     };
@@ -177,35 +216,30 @@ const Sphere = () => {
       })
       .catch((error) => console.error(error));
   };
+  
 
   return (
     <div>
-      <div className='oracle'
-      // style={{
-      //   position: 'fixed',
-      //   top: '50%',
-      //   left: '50%',
-      //   transform: 'translate(-50%, -50%)',
-      //   zIndex: 1,
-      // }}
-      >
-        <div className='label'>
-          <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
-          </label>
+      {isSphereClicked && ( // Render the input form only if the sphere is clicked
+        <div className='oracle'>
+          <div className='label'>
+            <label className='text-white' htmlFor="questionInput">
+              Please enter your question for the Space Oracle below:
+            </label>
+          </div>
+          <div className='questionInput'>
+            <input
+              id="questionInput"
+              type="text"
+              value={question}
+              onChange={handleQuestionChange}
+            />
+            <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+          </div>
+          <p className='text-white'>{response}</p>
         </div>
-        <div className='questionInput'>
-          <input
-            id="questionInput"
-            type="text"
-            value={question}
-            onChange={handleQuestionChange}
-
-          />
-          <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
-        </div>
-        <p className='text-white'>{response}</p>
-      </div>
-      <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
+      )}
+      <div className="container" ref={containerRef} />
     </div>
   );
 };
