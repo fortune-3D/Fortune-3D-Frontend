@@ -34,10 +34,34 @@ const Sphere = () => {
       starPositions[i3 + 2] = (Math.random() - 0.5) * 2000;
     }
 
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
+      // Create a custom shader material for the stars
+    const starVertexShader = `
+      attribute float size;
+      void main() {
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = size * (300.0 / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `;
+
+    const starFragmentShader = `
+      void main() {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      }
+    `;
+
+    const starsMaterial = new THREE.ShaderMaterial({
+      vertexShader: starVertexShader,
+      fragmentShader: starFragmentShader,
+    });
+
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
+
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    // const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
+    // const stars = new THREE.Points(starsGeometry, starsMaterial);
+    // scene.add(stars);
 
     const light = new THREE.PointLight(0xFFFFFF);
     light.position.set(10, 10, 10);
