@@ -14,6 +14,7 @@ const Sphere = () => {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const cameraRef = useRef(null);
+  const [showUI, setShowUI] = useState(false);
 
   useEffect(() => {
     const scene = new THREE.Scene();
