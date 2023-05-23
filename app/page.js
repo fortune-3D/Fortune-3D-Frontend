@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { Lensflare, LensflareElement } from 'three/examples/jsm/objects/Lensflare.js';
+// import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import 'typeface-poppins';
 import './globals.css';
 
@@ -14,6 +19,10 @@ const Sphere = () => {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const cameraRef = useRef(null);
+  const [showUI, setShowUI] = useState(false);
+  const [uiPosition, setUIPosition] = useState({ x: 0, y: 0 });
+  const fontRef = useRef(null);
+
 
   useEffect(() => {
     const scene = new THREE.Scene();
@@ -96,15 +105,6 @@ const Sphere = () => {
     scene.add(plane);
 
     starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    // const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF });
-    // const stars = new THREE.Points(starsGeometry, starsMaterial);
-    // scene.add(stars);
-
-    // const light = new THREE.PointLight(0xFFFFFF);
-    // light.position.set(10, 10, 10);
-    // scene.add(light);
-
-
     const geometry = new THREE.SphereGeometry(1, 64, 64);
 
     // Load the texture
@@ -117,8 +117,69 @@ const Sphere = () => {
       shininess: 100,
     });
 
+    // Earth
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
+
+
+    // Create the Oracle
+    const planetGeometry1 = new THREE.SphereGeometry(0.1, 64, 64);
+    const planetMaterial1 = new THREE.MeshPhongMaterial({
+      color: 0xffffff, // Specify the color for the planet
+      shininess: 50,
+    });
+    const planet1 = new THREE.Mesh(planetGeometry1, planetMaterial1);
+    planet1.position.set(-2, 0, 0); // Set the position of the planet
+    scene.add(planet1); // Add the planet to the scene
+
+    // Create the material for the emitting sphere
+    const emittingMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffff00, // Set the emissive color to white
+      emissiveIntensity: 1, // Adjust the intensity as needed
+    });
+
+    // Create the emitting sphere geometry
+    const emittingGeometry = new THREE.SphereGeometry(0.2, 64, 64);
+    const emittingSphere = new THREE.Mesh(emittingGeometry, emittingMaterial);
+    emittingSphere.position.set(-2,0,0);
+    scene.add(emittingSphere);
+
+
+    // Create a render pass
+    const renderPass = new RenderPass(scene, camera);
+
+    // Create an unreal bloom pass for the glow effect
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0;
+    bloomPass.strength = 3;
+    bloomPass.radius = 1;
+
+    // Create an effect composer and add the passes
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderPass);
+    composer.addPass(bloomPass);
+
+
+    // Create the second planet
+    const planetGeometry2 = new THREE.SphereGeometry(0.3, 16, 16);
+    const planetMaterial2 = new THREE.MeshPhongMaterial({
+      color: 0x00ff00, // Specify the color for the planet
+      shininess: 30,
+    });
+    const planet2 = new THREE.Mesh(planetGeometry2, planetMaterial2);
+    planet2.position.set(2, 0, -20); // Set the position of the planet
+    scene.add(planet2); // Add the planet to the scene
+
+    // Create the Sun
+
+    const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
+    const sunTextureLoader = new THREE.TextureLoader();
+    const sunTexture = sunTextureLoader.load('2k_sun.jpg'); // Replace with the path to your sun texture
+    const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    sun.position.set(20,20,300)
+    scene.add(sun);
 
     const handleResize = () => {
       const width = window.innerWidth;
@@ -160,6 +221,9 @@ const Sphere = () => {
       sphere.rotation.x += 0.000028;
       sphere.rotation.y += 0.001;
 
+      sun.rotation.x += 0.00005;
+      sun.rotation.y -= 0.001;
+
       renderer.render(scene, cameraRef.current);
     };
 
@@ -179,9 +243,11 @@ const Sphere = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('wheel', handleMouseWheel);
+      window.removeEventListener('mousedown', handleMouseDown);
       renderer.dispose();
     };
-  }, []);
+  }, [showUI, uiPosition]);
+
 
   const handleQuestionChange = (event) => {
     setQuestion(event.target.value);
@@ -209,7 +275,7 @@ const Sphere = () => {
   };
 
   return (
-    <div>
+   <div>
       <div className='oracle'
       // style={{
       //   position: 'fixed',
