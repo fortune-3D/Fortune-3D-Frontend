@@ -8,6 +8,7 @@ Tyler Huntley
 Dominick Martin
 
 Cooperation Plan
+
 Make a list of each parson’s strengths.
 
 Sheldon: Initiative, Growth-mindset
