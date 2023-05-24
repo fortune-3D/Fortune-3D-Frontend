@@ -4,6 +4,7 @@
 
 Fortune 3D is an immersive space-themed fortune-telling platform that takes users on an extraordinary journey through the cosmos. This interactive website application offers a captivating and entertaining way to delve into the mysteries of the universe. By harnessing the vast expanse of space as a backdrop, users can explore personalized and mesmerizing glimpses into their future. CosmicOracle aims to ignite curiosity and provide a celestial escape from the mundane, offering a cosmic adventure that transports users beyond the confines of everyday life. Embrace the unknown, seek amusement, and embark on a captivating cosmic diversion.    
 Click the "Oracle" near the Earth and ask a question! Wait for the response.   
+We hope you enjoy our app!
 Any advice given by our app should not be taken seriously.  
 
 ## Authors
