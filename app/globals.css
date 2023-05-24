@@ -1,4 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
+
+body, html {
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+.Webgl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.oracle {
+  z-index: 2;
+  position: absolute;
+  left: 50%;
+  top: 75%;
+  transform: translate(-50%, -75%);
+}
+
+.label {
+  font-size: 1.2rem;
+  font-family: "Poppins", sans-serif;
+  font: bold;
+}
+
+.questionInput {
+  flex: auto;
+  justify-content: center;
+  padding-left: 170px;
+  font-family: "Poppins", sans-serif;
+}
