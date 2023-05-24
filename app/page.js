@@ -18,6 +18,8 @@ const Sphere = () => {
   // const [uiPosition, setUIPosition] = useState({ x: 0, y: 0 });
   const fontRef = useRef(null);
   const planetsRef = useRef([])
+  const [isSphereClicked, setIsSphereClicked] = useState(false);
+
 
 
   const calculatePlanetPosition = (planet, orbitRadius, angle) => {
@@ -93,7 +95,8 @@ const Sphere = () => {
   };
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 20;
+    camera.position.z = 40;
+    camera.position.y = 20;
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -187,7 +190,7 @@ const Sphere = () => {
     const rotationSpeed = 0.75; // Adjust the rotation speed as needed
 
     // Create the Sun
-    const sunGeometry = new THREE.SphereGeometry(1, 64, 64);
+    const sunGeometry = new THREE.SphereGeometry(5, 64, 64);
     const sunTextureLoader = new THREE.TextureLoader();
     const sunTexture = sunTextureLoader.load('2k_sun.jpg'); // Replace with the path to your sun texture
     const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
@@ -197,7 +200,7 @@ const Sphere = () => {
     planetsRef.current.push(sun);
 
     // Create Mercury
-    const mercuryGeometry = new THREE.SphereGeometry(1, 64, 64);
+    const mercuryGeometry = new THREE.SphereGeometry(0.38, 64, 64);
     const mercuryTextureLoader = new THREE.TextureLoader();
     const mercuryTexture = mercuryTextureLoader.load('2k_mercury.jpg'); // Replace with the path to your sun texture
     const mercuryMaterial = new THREE.MeshBasicMaterial({ map: mercuryTexture });
@@ -208,7 +211,7 @@ const Sphere = () => {
     mercury.rotationSpeed = 0.01
 
     // Create Venus
-    const venusGeometry = new THREE.SphereGeometry(1, 64, 64);
+    const venusGeometry = new THREE.SphereGeometry(0.95, 64, 64);
     const venusTextureLoader = new THREE.TextureLoader();
     const venusTexture = venusTextureLoader.load('2k_venus_surface.jpg'); // Replace with the path to your sun texture
     const venusMaterial = new THREE.MeshBasicMaterial({ map: venusTexture });
@@ -238,34 +241,72 @@ const Sphere = () => {
     const moonOrbitRadius = 2; // Adjust the moon's orbit radius as needed
     const moonRotationSpeed = 25; // Adjust the moon's rotation speed as needed
 
+    // Create Mars
+    const marsGeometry = new THREE.SphereGeometry(0.53, 64, 64);
+    const marsTextureLoader = new THREE.TextureLoader();
+    const marsTexture = marsTextureLoader.load('2k_mars.jpg'); // Replace with the path to your sun texture
+    const marsMaterial = new THREE.MeshBasicMaterial({ map: marsTexture });
+    const mars = new THREE.Mesh(marsGeometry, marsMaterial);
+    mars.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(mars);
+    planetsRef.current.push(mars);
+    mars.rotationSpeed = 0.007
 
-    const mercuryOrbit = createOrbit(10, 0xffffff, "Mercury", -7);
-    const venusOrbit = createOrbit(15, 0xffffff, "Venus", 3.39);
-    const earthOrbit = createOrbit(20, 0xffffff, "Earth", 0);
-    // const marsOrbit = createOrbit(20, 0xff3300, "Mars");
+    // Create Jupiter
+    const jupiterGeometry = new THREE.SphereGeometry(4.3, 64, 64);
+    const jupiterTextureLoader = new THREE.TextureLoader();
+    const jupiterTexture = jupiterTextureLoader.load('2k_jupiter.jpg'); // Replace with the path to your sun texture
+    const jupiterMaterial = new THREE.MeshBasicMaterial({ map: jupiterTexture });
+    const jupiter = new THREE.Mesh(jupiterGeometry, jupiterMaterial);
+    jupiter.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(jupiter);
+    planetsRef.current.push(jupiter);
+    jupiter.rotationSpeed = 0.007
 
-    function createPlanetLabel(text) {
-      const labelCanvas = document.createElement('canvas');
-      const context = labelCanvas.getContext('2d');
-      context.font = '12px Arial';
-      const textWidth = context.measureText(text).width;
+    // Create Saturn
+    const saturnGeometry = new THREE.SphereGeometry(3.9, 64, 64);
+    const saturnTextureLoader = new THREE.TextureLoader();
+    const saturnTexture = saturnTextureLoader.load('2k_saturn.jpg'); // Replace with the path to your sun texture
+    const saturnMaterial = new THREE.MeshBasicMaterial({ map: saturnTexture });
+    const saturn = new THREE.Mesh(saturnGeometry, saturnMaterial);
+    saturn.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(saturn);
+    planetsRef.current.push(saturn);
+    saturn.rotationSpeed = 0.007
 
-      labelCanvas.width = textWidth;
-      labelCanvas.height = 16;
+    // Create Uranus
+    const uranusGeometry = new THREE.SphereGeometry(1.6, 64, 64);
+    const uranusTextureLoader = new THREE.TextureLoader();
+    const uranusTexture = uranusTextureLoader.load('2k_uranus.jpg'); // Replace with the path to your sun texture
+    const uranusMaterial = new THREE.MeshBasicMaterial({ map: uranusTexture });
+    const uranus = new THREE.Mesh(uranusGeometry, uranusMaterial);
+    uranus.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(uranus);
+    planetsRef.current.push(uranus);
+    uranus.rotationSpeed = 0.007
 
-      context.font = '12px Arial';
-      context.fillStyle = 'white';
-      context.fillText(text, 0, 12);
+    // Create Neptune
+    const neptuneGeometry = new THREE.SphereGeometry(1.5, 64, 64);
+    const neptuneTextureLoader = new THREE.TextureLoader();
+    const neptuneTexture = neptuneTextureLoader.load('2k_neptune.jpg'); // Replace with the path to your sun texture
+    const neptuneMaterial = new THREE.MeshBasicMaterial({ map: neptuneTexture });
+    const neptune = new THREE.Mesh(neptuneGeometry, neptuneMaterial);
+    neptune.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(neptune);
+    planetsRef.current.push(neptune);
+    neptune.rotationSpeed = 0.007
 
-      const labelTexture = new THREE.CanvasTexture(labelCanvas);
-      const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
 
-      const labelSprite = new THREE.Sprite(labelMaterial);
-      labelSprite.scale.set(1, 0.5, 1);
-      labelSprite.position.set(0, 1.5, 0); // Adjust the label position relative to the planet
+    const mercuryOrbit = createOrbit(11, 0xffffff, "Mercury", -7);
+    const venusOrbit = createOrbit(28, 0xffffff, "Venus", 3.39);
+    const earthOrbit = createOrbit(44, 0xffffff, "Earth", 0);
+    const marsOrbit = createOrbit(59, 0xffffff, "Mars", 1.85);
+    const jupiterOrbit = createOrbit(80, 0xffffff, "Jupiter", 1.3);
+    const saturnOrbit = createOrbit(89, 0xffffff, "Saturn", 2.49);
+    const uranusOrbit = createOrbit(96, 0xffffff, "Uranus", 0.77);
+    const neptuneOrbit = createOrbit(100, 0xffffff, "Neptune", 1.77);
 
-      return labelSprite;
-    }
+
 
     // // Create the Oracle
     // const planetGeometry1 = new THREE.SphereGeometry(0.1, 64, 64);
@@ -353,10 +394,13 @@ const Sphere = () => {
 
       const time = Date.now() * 0.0001;
 
+      const orbitDistances = [11, 28, 44, 59, 80, 89, 96, 100];
+
       for (let i = 1; i < planetsRef.current.length; i++) {
         const planet = planetsRef.current[i];
         const orbitAngle = time * rotationSpeed * (i + 1);
-        calculatePlanetPosition(planet, orbitRadius * (i + 1), orbitAngle);
+        const orbitRadius = orbitDistances[i - 1]
+        calculatePlanetPosition(planet, orbitRadius, orbitAngle);
       }
 
       const moonOrbitAngle = time * moonRotationSpeed;
