@@ -15,10 +15,6 @@ const Sphere = () => {
   const planetsRef = useRef([])
   const [isSphereClicked, setIsSphereClicked] = useState(false);
 
-
-
-
-
   const calculatePlanetPosition = (planet, orbitRadius, angle) => {
   const x = Math.cos(angle) * orbitRadius;
   const z = Math.sin(angle) * orbitRadius;
@@ -30,7 +26,6 @@ const Sphere = () => {
     const scene = new THREE.Scene();
 
     //Orbit
-
     const createOrbit = (radius, color = 0xffffff, label, tiltAngle = 0) => {
       const orbitGroup = new THREE.Group();
 
@@ -60,7 +55,6 @@ const Sphere = () => {
     };
 
     //Labels
-
     const createLabelSprite = (text) => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -313,17 +307,6 @@ const Sphere = () => {
       renderer.setSize(width, height);
     };
 
-    // const handleMouseWheel = (event) => {
-    //   const zoomSpeed = 0.01;
-    //   const minZoom = 2;
-    //   const maxZoom = 50;
-    //
-    //   const deltaY = event.deltaY;
-    //   let zoom = camera.position.z + deltaY * zoomSpeed;
-    //   zoom = Math.max(zoom, minZoom);
-    //   zoom = Math.min(zoom, maxZoom);
-    //   camera.position.z = zoom;
-    // };
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -506,13 +489,11 @@ const handleSphereClick = (event) => {
 
     window.addEventListener('resize', handleResize);
     containerRef.current.addEventListener('click', handleSphereClick);
-    // window.addEventListener('wheel', handleMouseWheel);
 
     animate();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      // window.removeEventListener('wheel', handleMouseWheel);
       renderer.dispose();
     };
   }, [] // useEffect ends here
@@ -568,30 +549,6 @@ const handleSphereClick = (event) => {
     </div>
   );
 
-
-  // return (
-  //  <div>
-  //     <div className='oracle'>
-  //       <div className='label'>
-  //         <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
-  //         </label>
-  //       </div>
-  //       <div className='questionInput'>
-  //         <input
-  //           id="questionInput"
-  //           type="text"
-  //           value={question}
-  //           onChange={handleQuestionChange}
-  //
-  //         />
-  //         <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
-  //       </div>
-  //       <p className='text-white'>{response}</p>
-  //     </div>
-  //     <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
-  //   </div>
-  //
-  // );
 };
 
 export default Sphere;
