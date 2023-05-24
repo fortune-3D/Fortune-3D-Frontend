@@ -6,29 +6,94 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
-import { Lensflare, LensflareElement } from 'three/examples/jsm/objects/Lensflare.js';
-// import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import 'typeface-poppins';
 import './globals.css';
-
-
 
 const Sphere = () => {
   const containerRef = useRef(null);
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const cameraRef = useRef(null);
-  const [showUI, setShowUI] = useState(false);
-  const [uiPosition, setUIPosition] = useState({ x: 0, y: 0 });
+  // const [showUI, setShowUI] = useState(false);
+  // const [uiPosition, setUIPosition] = useState({ x: 0, y: 0 });
   const fontRef = useRef(null);
+  const planetsRef = useRef([])
+
+
+  const calculatePlanetPosition = (planet, orbitRadius, angle) => {
+  const x = Math.cos(angle) * orbitRadius;
+  const z = Math.sin(angle) * orbitRadius;
+  planet.position.set(x, 0, z);
+};
 
 
   useEffect(() => {
     const scene = new THREE.Scene();
 
+    //Orbit
+
+    const createOrbit = (radius, color = 0xffffff, label, tiltAngle = 0) => {
+      const orbitGroup = new THREE.Group();
+
+      const curve = new THREE.EllipseCurve(0, 0, radius, radius);
+      const points = curve.getPoints(100);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+      const orbit = new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({ color })
+      );
+
+      orbitGroup.rotation.z = THREE.MathUtils.degToRad(tiltAngle);
+      orbitGroup.add(orbit);
+
+      orbit.rotation.x = -Math.PI * 0.5;
+      orbitGroup.add(orbit);
+
+      if (label) {
+        const labelSprite = createLabelSprite(label);
+        labelSprite.position.set(radius, 0, 0);
+        orbitGroup.add(labelSprite);
+      }
+
+      scene.add(orbitGroup);
+      return orbitGroup;
+    };
+
+    //Labels
+
+    const createLabelSprite = (text) => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    const fontSize = 12;
+    const fontFace = "Arial";
+    const textColor = "#ffffff";
+
+    context.font = `${fontSize}px ${fontFace}`;
+    const textWidth = context.measureText(text).width;
+
+    canvas.width = textWidth;
+    canvas.height = fontSize;
+
+    context.font = `${fontSize}px ${fontFace}`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = textColor;
+    context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    const material = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(material);
+
+    sprite.scale.set(2, 1, 1);
+
+    return sprite;
+  };
+
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
+    camera.position.z = 20;
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -117,69 +182,131 @@ const Sphere = () => {
       shininess: 100,
     });
 
-    // Earth
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-
-
-    // Create the Oracle
-    const planetGeometry1 = new THREE.SphereGeometry(0.1, 64, 64);
-    const planetMaterial1 = new THREE.MeshPhongMaterial({
-      color: 0xffffff, // Specify the color for the planet
-      shininess: 50,
-    });
-    const planet1 = new THREE.Mesh(planetGeometry1, planetMaterial1);
-    planet1.position.set(-2, 0, 0); // Set the position of the planet
-    scene.add(planet1); // Add the planet to the scene
-
-    // Create the material for the emitting sphere
-    const emittingMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: 0xffff00, // Set the emissive color to white
-      emissiveIntensity: 1, // Adjust the intensity as needed
-    });
-
-    // Create the emitting sphere geometry
-    const emittingGeometry = new THREE.SphereGeometry(0.2, 64, 64);
-    const emittingSphere = new THREE.Mesh(emittingGeometry, emittingMaterial);
-    emittingSphere.position.set(-2,0,0);
-    scene.add(emittingSphere);
-
-
-    // Create a render pass
-    const renderPass = new RenderPass(scene, camera);
-
-    // Create an unreal bloom pass for the glow effect
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0;
-    bloomPass.strength = 3;
-    bloomPass.radius = 1;
-
-    // Create an effect composer and add the passes
-    const composer = new EffectComposer(renderer);
-    composer.addPass(renderPass);
-    composer.addPass(bloomPass);
-
-
-    // Create the second planet
-    const planetGeometry2 = new THREE.SphereGeometry(0.3, 16, 16);
-    const planetMaterial2 = new THREE.MeshPhongMaterial({
-      color: 0x00ff00, // Specify the color for the planet
-      shininess: 30,
-    });
-    const planet2 = new THREE.Mesh(planetGeometry2, planetMaterial2);
-    planet2.position.set(2, 0, -20); // Set the position of the planet
-    scene.add(planet2); // Add the planet to the scene
+     // Animation variables
+    const orbitRadius = 5; // Adjust the orbit radius as needed
+    const rotationSpeed = 0.75; // Adjust the rotation speed as needed
 
     // Create the Sun
-
-    const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
+    const sunGeometry = new THREE.SphereGeometry(1, 64, 64);
     const sunTextureLoader = new THREE.TextureLoader();
     const sunTexture = sunTextureLoader.load('2k_sun.jpg'); // Replace with the path to your sun texture
     const sunMaterial = new THREE.MeshBasicMaterial({ map: sunTexture });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-    sun.position.set(20,20,300)
+    sun.position.set(0, 0, 0); // Place the sun at the center (0, 0, 0)
     scene.add(sun);
+    planetsRef.current.push(sun);
+
+    // Create Mercury
+    const mercuryGeometry = new THREE.SphereGeometry(1, 64, 64);
+    const mercuryTextureLoader = new THREE.TextureLoader();
+    const mercuryTexture = mercuryTextureLoader.load('2k_mercury.jpg'); // Replace with the path to your sun texture
+    const mercuryMaterial = new THREE.MeshBasicMaterial({ map: mercuryTexture });
+    const mercury = new THREE.Mesh(mercuryGeometry, mercuryMaterial);
+    mercury.position.set(5, 0, 0); // Place the sun at the center (0, 0, 0)
+    scene.add(mercury);
+    planetsRef.current.push(mercury);
+    mercury.rotationSpeed = 0.01
+
+    // Create Venus
+    const venusGeometry = new THREE.SphereGeometry(1, 64, 64);
+    const venusTextureLoader = new THREE.TextureLoader();
+    const venusTexture = venusTextureLoader.load('2k_venus_surface.jpg'); // Replace with the path to your sun texture
+    const venusMaterial = new THREE.MeshBasicMaterial({ map: venusTexture });
+    const venus = new THREE.Mesh(venusGeometry, venusMaterial);
+    venus.position.set(10, 10, 10); // Place the sun at the center (0, 0, 0)
+    scene.add(venus);
+    planetsRef.current.push(venus);
+    venus.rotationSpeed = 0.007
+
+    // Earth
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+    sphere.position.set(15,0,0)
+    planetsRef.current.push(sphere);
+    sphere.rotationSpeed = 0.005
+
+    // Create Moon
+    const moonGeometry = new THREE.SphereGeometry(0.5, 64, 64);
+    const moonTextureLoader = new THREE.TextureLoader();
+    const moonTexture = moonTextureLoader.load('2k_moon.jpg');
+    const moonMaterial = new THREE.MeshBasicMaterial({ map: moonTexture });
+    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+    moon.position.set(2, 0, 0); // Adjust the position relative to Venus
+    sphere.add(moon); // Add the moon as a child of Venus
+
+    // Update moon's position in the animation loop
+    const moonOrbitRadius = 2; // Adjust the moon's orbit radius as needed
+    const moonRotationSpeed = 25; // Adjust the moon's rotation speed as needed
+
+
+    const mercuryOrbit = createOrbit(10, 0xffffff, "Mercury", -7);
+    const venusOrbit = createOrbit(15, 0xffffff, "Venus", 3.39);
+    const earthOrbit = createOrbit(20, 0xffffff, "Earth", 0);
+    // const marsOrbit = createOrbit(20, 0xff3300, "Mars");
+
+    function createPlanetLabel(text) {
+      const labelCanvas = document.createElement('canvas');
+      const context = labelCanvas.getContext('2d');
+      context.font = '12px Arial';
+      const textWidth = context.measureText(text).width;
+
+      labelCanvas.width = textWidth;
+      labelCanvas.height = 16;
+
+      context.font = '12px Arial';
+      context.fillStyle = 'white';
+      context.fillText(text, 0, 12);
+
+      const labelTexture = new THREE.CanvasTexture(labelCanvas);
+      const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
+
+      const labelSprite = new THREE.Sprite(labelMaterial);
+      labelSprite.scale.set(1, 0.5, 1);
+      labelSprite.position.set(0, 1.5, 0); // Adjust the label position relative to the planet
+
+      return labelSprite;
+    }
+
+    // // Create the Oracle
+    // const planetGeometry1 = new THREE.SphereGeometry(0.1, 64, 64);
+    // const planetMaterial1 = new THREE.MeshPhongMaterial({
+    //   color: 0xffffff, // Specify the color for the planet
+    //   shininess: 50,
+    // });
+    // const planet1 = new THREE.Mesh(planetGeometry1, planetMaterial1);
+    // planet1.position.set(-2, 0, 0); // Set the position of the planet
+    // scene.add(planet1); // Add the planet to the scene
+    // planetsRef.current.push(planet1);
+
+
+
+    // // Create the material for the emitting sphere
+    // const emittingMaterial = new THREE.MeshStandardMaterial({
+    //   color: 0xffffff,
+    //   emissive: 0xffff00, // Set the emissive color to white
+    //   emissiveIntensity: 1, // Adjust the intensity as needed
+    // });
+    //
+    // // Create the emitting sphere geometry
+    // const emittingGeometry = new THREE.SphereGeometry(0.2, 64, 64);
+    // const emittingSphere = new THREE.Mesh(emittingGeometry, emittingMaterial);
+    // emittingSphere.position.set(-2, 0, 0);
+    // scene.add(emittingSphere);
+    //
+    // // Create a render pass
+    // const renderPass = new RenderPass(scene, camera);
+    //
+    // // Create an unreal bloom pass for the glow effect
+    // const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    // bloomPass.threshold = 0;
+    // bloomPass.strength = 3;
+    // bloomPass.radius = 1;
+    //
+    // // Create an effect composer and add the passes
+    // const composer = new EffectComposer(renderer);
+    // composer.addPass(renderPass);
+    // composer.addPass(bloomPass);
+
 
     const handleResize = () => {
       const width = window.innerWidth;
@@ -224,6 +351,17 @@ const Sphere = () => {
       sun.rotation.x += 0.00005;
       sun.rotation.y -= 0.001;
 
+      const time = Date.now() * 0.0001;
+
+      for (let i = 1; i < planetsRef.current.length; i++) {
+        const planet = planetsRef.current[i];
+        const orbitAngle = time * rotationSpeed * (i + 1);
+        calculatePlanetPosition(planet, orbitRadius * (i + 1), orbitAngle);
+      }
+
+      const moonOrbitAngle = time * moonRotationSpeed;
+      calculatePlanetPosition(moon, moonOrbitRadius, moonOrbitAngle);
+
       renderer.render(scene, cameraRef.current);
     };
 
@@ -243,10 +381,12 @@ const Sphere = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('wheel', handleMouseWheel);
-      window.removeEventListener('mousedown', handleMouseDown);
       renderer.dispose();
     };
-  }, [showUI, uiPosition]);
+  }, []
+        // [showUI, uiPosition]
+  );
+
 
 
   const handleQuestionChange = (event) => {
@@ -261,11 +401,6 @@ const Sphere = () => {
         const fortune = data[Math.floor(Math.random() * data.length)].fortune;
         setResponse(fortune);
         const responseText = new THREE.Mesh(
-          // new THREE.TextBufferGeometry(fortune, {
-          //   font: THREE.FontUtils.faces['helvetiker'],
-          //   size: 0.1,
-          //   height: 0.02,
-          // }),
           new THREE.MeshBasicMaterial({ color: 0xffffff })
         );
         responseText.position.set(0, 0.3, -2); // Adjust the position as needed
@@ -274,17 +409,11 @@ const Sphere = () => {
       .catch((error) => console.error(error));
   };
 
+  console.log(planetsRef.current)
+
   return (
    <div>
-      <div className='oracle'
-      // style={{
-      //   position: 'fixed',
-      //   top: '50%',
-      //   left: '50%',
-      //   transform: 'translate(-50%, -50%)',
-      //   zIndex: 1,
-      // }}
-      >
+      <div className='oracle'>
         <div className='label'>
           <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
           </label>
@@ -303,6 +432,7 @@ const Sphere = () => {
       </div>
       <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
     </div>
+
   );
 };
 
