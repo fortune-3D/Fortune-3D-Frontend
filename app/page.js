@@ -3,9 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import 'typeface-poppins';
 import './globals.css';
 
@@ -14,11 +11,11 @@ const Sphere = () => {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState('');
   const cameraRef = useRef(null);
-  // const [showUI, setShowUI] = useState(false);
-  // const [uiPosition, setUIPosition] = useState({ x: 0, y: 0 });
   const fontRef = useRef(null);
   const planetsRef = useRef([])
   const [isSphereClicked, setIsSphereClicked] = useState(false);
+
+
 
 
 
@@ -306,49 +303,6 @@ const Sphere = () => {
     const uranusOrbit = createOrbit(96, 0xffffff, "Uranus", 0.77);
     const neptuneOrbit = createOrbit(100, 0xffffff, "Neptune", 1.77);
 
-
-
-    // // Create the Oracle
-    // const planetGeometry1 = new THREE.SphereGeometry(0.1, 64, 64);
-    // const planetMaterial1 = new THREE.MeshPhongMaterial({
-    //   color: 0xffffff, // Specify the color for the planet
-    //   shininess: 50,
-    // });
-    // const planet1 = new THREE.Mesh(planetGeometry1, planetMaterial1);
-    // planet1.position.set(-2, 0, 0); // Set the position of the planet
-    // scene.add(planet1); // Add the planet to the scene
-    // planetsRef.current.push(planet1);
-
-
-
-    // // Create the material for the emitting sphere
-    // const emittingMaterial = new THREE.MeshStandardMaterial({
-    //   color: 0xffffff,
-    //   emissive: 0xffff00, // Set the emissive color to white
-    //   emissiveIntensity: 1, // Adjust the intensity as needed
-    // });
-    //
-    // // Create the emitting sphere geometry
-    // const emittingGeometry = new THREE.SphereGeometry(0.2, 64, 64);
-    // const emittingSphere = new THREE.Mesh(emittingGeometry, emittingMaterial);
-    // emittingSphere.position.set(-2, 0, 0);
-    // scene.add(emittingSphere);
-    //
-    // // Create a render pass
-    // const renderPass = new RenderPass(scene, camera);
-    //
-    // // Create an unreal bloom pass for the glow effect
-    // const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    // bloomPass.threshold = 0;
-    // bloomPass.strength = 3;
-    // bloomPass.radius = 1;
-    //
-    // // Create an effect composer and add the passes
-    // const composer = new EffectComposer(renderer);
-    // composer.addPass(renderPass);
-    // composer.addPass(bloomPass);
-
-
     const handleResize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -359,17 +313,17 @@ const Sphere = () => {
       renderer.setSize(width, height);
     };
 
-    const handleMouseWheel = (event) => {
-      const zoomSpeed = 0.01;
-      const minZoom = 2;
-      const maxZoom = 50;
-
-      const deltaY = event.deltaY;
-      let zoom = camera.position.z + deltaY * zoomSpeed;
-      zoom = Math.max(zoom, minZoom);
-      zoom = Math.min(zoom, maxZoom);
-      camera.position.z = zoom;
-    };
+    // const handleMouseWheel = (event) => {
+    //   const zoomSpeed = 0.01;
+    //   const minZoom = 2;
+    //   const maxZoom = 50;
+    //
+    //   const deltaY = event.deltaY;
+    //   let zoom = camera.position.z + deltaY * zoomSpeed;
+    //   zoom = Math.max(zoom, minZoom);
+    //   zoom = Math.min(zoom, maxZoom);
+    //   camera.position.z = zoom;
+    // };
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -417,18 +371,151 @@ const Sphere = () => {
     controls.autoRotate = true
     controls.autoRotateSpeed = 3
 
+
+    let clickCount = 0;
+
+
+const handleSphereClick = (event) => {
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  // Calculate the mouse position in normalized device coordinates (-1 to +1)
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // Set the raycaster origin and direction based on the mouse position
+  raycaster.setFromCamera(mouse, cameraRef.current);
+
+  // Find all intersected objects
+  const intersects = raycaster.intersectObjects(scene.children, true);
+
+  // Check if the sphere is clicked
+  for (let i = 0; i < intersects.length; i++) {
+    if (intersects[i].object === sun) {
+      clickCount++;
+
+      const zoomSpeed = 0.1;
+      const minZoom = 10;
+      const maxZoom = 40;
+
+      if (clickCount % 2 === 1) {
+        // Odd click count, zoom in and show input form
+        const targetZoom = minZoom;
+
+        const currentZoom = cameraRef.current.position.z;
+        const zoomDistance = targetZoom - currentZoom;
+
+
+        const maxFrames = 60; // Maximum number of frames for the animation
+        let frameCount = 0; // Counter for the frames elapsed
+
+        const animateZoomIn = () => {
+          if (frameCount >= maxFrames) {
+            // Stop the animation when the maximum number of frames is reached
+            cameraRef.current.position.z = targetZoom;
+            controls.update();
+            // Show input form here
+            setIsSphereClicked(true);
+            return;
+          }
+
+          // Calculate the progress based on the current frame count and the maximum number of frames
+          const progress = frameCount / maxFrames;
+
+          // Calculate the new zoom value based on the progress and the current position and target zoom
+          const newZoom = currentZoom + zoomDistance * progress;
+
+          // Calculate the new camera position
+          const cameraPosition = new THREE.Vector3(0, 0, newZoom);
+          cameraPosition.applyQuaternion(cameraRef.current.quaternion);
+
+          // Update the camera position and target of OrbitControls
+          cameraRef.current.position.copy(cameraPosition);
+          controls.target = sun.position;
+
+          controls.update(); // Update the controls to apply the changes
+
+          // Render the scene with the updated camera position
+          renderer.render(scene, cameraRef.current);
+
+          // Increase the frame count
+          frameCount++;
+
+          // Call the next frame of the animation
+          requestAnimationFrame(animateZoomIn);
+        };
+
+        // Start the zoom in animation
+        animateZoomIn();
+      } else {
+        // Even click count, zoom out and hide input form
+        const targetZoom = maxZoom;
+
+        const currentZoom = cameraRef.current.position.z;
+        const zoomDistance = targetZoom - currentZoom;
+
+
+        const maxFrames = 60; // Maximum number of frames for the animation
+        let frameCount = 0; // Counter for the frames elapsed
+
+        const animateZoomOut = () => {
+          if (frameCount >= maxFrames) {
+            // Stop the animation when the maximum number of frames is reached
+            cameraRef.current.position.z = targetZoom;
+            controls.update();
+            // Hide input form here
+            setIsSphereClicked(false);
+            return;
+          }
+
+          // Calculate the progress based on the current frame count and the maximum number of frames
+          const progress = frameCount / maxFrames;
+
+          // Calculate the new zoom value based on the progress and the current position and target zoom
+          const newZoom = currentZoom + zoomDistance * progress;
+
+          // Calculate the new camera position
+          const cameraPosition = new THREE.Vector3(0, 0, newZoom);
+          cameraPosition.applyQuaternion(cameraRef.current.quaternion);
+
+          // Update the camera position and target of OrbitControls
+          cameraRef.current.position.copy(cameraPosition);
+          controls.target = sun.position;
+
+          controls.update(); // Update the controls to apply the changes
+
+          // Render the scene with the updated camera position
+          renderer.render(scene, cameraRef.current);
+
+          // Increase the frame count
+          frameCount++;
+
+          // Call the next frame of the animation
+          requestAnimationFrame(animateZoomOut);
+        };
+
+        // Start the zoom out animation
+        animateZoomOut();
+      }
+
+      break;
+    }
+  }
+};
+
+
     window.addEventListener('resize', handleResize);
-    window.addEventListener('wheel', handleMouseWheel);
+    containerRef.current.addEventListener('click', handleSphereClick);
+    // window.addEventListener('wheel', handleMouseWheel);
 
     animate();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('wheel', handleMouseWheel);
+      // window.removeEventListener('wheel', handleMouseWheel);
       renderer.dispose();
     };
-  }, []
-        // [showUI, uiPosition]
+  }, [] // useEffect ends here
   );
 
 
@@ -455,29 +542,56 @@ const Sphere = () => {
 
   console.log(planetsRef.current)
 
+
   return (
-   <div>
-      <div className='oracle'>
-        <div className='label'>
-          <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
-          </label>
+    <div>
+      {isSphereClicked && ( // Render the input form only if the sphere is clicked
+        <div className='oracle'>
+          <div className='label'>
+            <label className='text-white' htmlFor="questionInput">
+              Please enter your question for the Space Oracle below:
+            </label>
+          </div>
+          <div className='questionInput'>
+            <input
+              id="questionInput"
+              type="text"
+              value={question}
+              onChange={handleQuestionChange}
+            />
+            <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+          </div>
+          <p className='text-white'>{response}</p>
         </div>
-        <div className='questionInput'>
-          <input
-            id="questionInput"
-            type="text"
-            value={question}
-            onChange={handleQuestionChange}
-
-          />
-          <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
-        </div>
-        <p className='text-white'>{response}</p>
-      </div>
-      <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
+      )}
+      <div className="container" ref={containerRef}/>
     </div>
-
   );
+
+
+  // return (
+  //  <div>
+  //     <div className='oracle'>
+  //       <div className='label'>
+  //         <label className='text-white' htmlFor="questionInput">Please enter your question for the Space Oracle below:
+  //         </label>
+  //       </div>
+  //       <div className='questionInput'>
+  //         <input
+  //           id="questionInput"
+  //           type="text"
+  //           value={question}
+  //           onChange={handleQuestionChange}
+  //
+  //         />
+  //         <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+  //       </div>
+  //       <p className='text-white'>{response}</p>
+  //     </div>
+  //     <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
+  //   </div>
+  //
+  // );
 };
 
 export default Sphere;
