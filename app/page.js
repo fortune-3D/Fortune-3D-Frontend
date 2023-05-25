@@ -528,6 +528,7 @@ const handleSphereClick = (event) => {
     <div>
       {isSphereClicked && ( // Render the input form only if the sphere is clicked
         <div className='oracle'>
+          <div className='w-full h-full backdrop-brightness-50 p-4 flex flex-col items-center'>
           <div className='label'>
             <label className='text-white' htmlFor="questionInput">
               Please enter your question for the Space Oracle below:
@@ -540,9 +541,12 @@ const handleSphereClick = (event) => {
               value={question}
               onChange={handleQuestionChange}
             />
-            <button className='text-white pl-2' onClick={handleAskQuestion}>Ask</button>
+            <div>
+            <button className='text-white pt-2' onClick={handleAskQuestion}>Ask</button>
+            </div>
           </div>
           <p className='text-white'>{response}</p>
+        </div>
         </div>
       )}
       <div className="container" ref={containerRef}/>
